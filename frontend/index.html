@@ -170,7 +170,7 @@
             const defenders = document.getElementById("defenders").value;
             const side = document.getElementById("side").value;
 
-            const url = `http://127.0.0.1:8000/predict?distance=${distance}&angle=${angle}&body_part=${body_part}&shot_type=${shot_type}&technique=${technique}&defenders=${defenders}`;
+            const url = `https://aditya-xg-predictor.onrender.com/predict?distance=${distance}&angle=${angle}&body_part=${body_part}&shot_type=${shot_type}&technique=${technique}&defenders=${defenders}`;
 
             const response = await fetch(url);
             const data = await response.json();

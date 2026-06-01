@@ -3,6 +3,7 @@ import pandas as pd
 
 model = joblib.load("models/xg_model.pkl")
 
+
 def predict_xg(distance, angle, first_time, open_goal, pressure, 
                body_part, shot_type, technique, gk_distance, defenders):
     

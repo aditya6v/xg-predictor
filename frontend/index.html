@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xG Predictor</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 40px auto;
+            background-color: #1a1a2e;
+            color: white;
+            padding: 20px;
+        }
+        h1 { color: #4fc3f7; }
+        div { margin: 10px 0; }
+        label { display: inline-block; width: 180px; }
+        input, select {
+            padding: 5px;
+            width: 150px;
+            background: #16213e;
+            color: white;
+            border: 1px solid #4fc3f7;
+            border-radius: 4px;
+        }
+        button {
+            margin-top: 15px;
+            padding: 10px 25px;
+            background: #4fc3f7;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 28px;
+            color: #81c784;
+        }
+    </style>
+</head>
+<body>
+    <h1>xG Predictor</h1>
+    <p>Enter shot details to get an Expected Goals prediction</p>
+    <div>
+        <label>Distance (yards):</label>
+        <input type="number" id="distance" value="20">
+    </div>
+    
+    <div>
+        <label>Angle (degrees):</label>
+        <input type="number" id="angle" value="30">
+    </div>
+
+    <div>
+        <label>Side:</label>
+        <select id="side">
+            <option value="center">Central</option>
+            <option value="left">Left Side</option>
+            <option value="right">Right Side</option>
+        </select>
+    </div>
+
+    <div>
+        <label>Body Part:</label>
+        <select id="body_part">
+            <option value="right">Right Foot</option>
+            <option value="left">Left Foot</option>
+            <option value="head">Head</option>
+        </select>
+    </div>
+    
+    <div>
+        <label>Shot Type:</label>
+        <select id="shot_type">
+            <option value="openplay">Open Play</option>
+            <option value="corner">Corner</option>
+            <option value="freekick">Free Kick</option>
+        </select>
+    </div>
+    
+    <div>
+        <label>Technique:</label>
+        <select id="technique">
+            <option value="normal">Normal</option>
+            <option value="volley">Volley</option>
+            <option value="halfvolley">Half Volley</option>
+            <option value="lob">Lob</option>
+        </select>
+    </div>
+    
+    <div>
+        <label>Defenders in path:</label>
+        <input type="number" id="defenders" value="0">
+    </div>
+    
+    <button onclick="predict()">Predict xG</button>
+
+    <canvas id="pitch" width="500" height="400"></canvas>   
+    
+    <h2 id="result"></h2>
+
+    <script>
+        function drawPitch(distance, angle, defenders, side) {
+            const canvas = document.getElementById("pitch");
+            const ctx = canvas.getContext("2d");
+            
+            ctx.fillStyle = "#2d5a27";
+            ctx.fillRect(0, 0, 500, 400);
+            
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(460, 160, 40, 80);
+            ctx.strokeRect(350, 100, 150, 200);
+            
+            const scale = 4;
+            const shotX = 450 - (distance * scale);
+            const offset = (1 - angle / 90) * 100;
+            
+            // Now uses side to determine which direction
+            const shotY = side === "center" ? 150 : 
+                        side === "left" ? 150 - offset : 
+                        150 + offset;
+            
+            // Goalkeeper
+            ctx.beginPath();
+            ctx.arc(468, 200, 6, 0, Math.PI * 2);
+            ctx.fillStyle = "#ffeb3b";
+            ctx.fill();
+            
+            // Defenders spread along the line from shot to goal
+            for (let i = 0; i < defenders; i++) {
+                const t = (i + 1) / (defenders + 1);
+                const defX = shotX + (385 - shotX) * t + (Math.random() * 6 - 3);
+                const defY = shotY + (150 - shotY) * t + (i % 2 === 0 ? -12 : 12) + (Math.random() * 6 - 3);
+                
+                // Only draw if defender is between shot and goal
+                if (defX > shotX && defX < 470) {
+                    ctx.beginPath();
+                    ctx.arc(defX, defY, 6, 0, Math.PI * 2);
+                    ctx.fillStyle = "#ef5350";
+                    ctx.fill();
+                }
+}
+            
+            // Shot location
+            ctx.beginPath();
+            ctx.arc(shotX, shotY, 8, 0, Math.PI * 2);
+            ctx.fillStyle = "#4fc3f7";
+            ctx.fill();
+            
+            // Line to goal
+            ctx.beginPath();
+            ctx.moveTo(shotX, shotY);
+            ctx.lineTo(470, 200);
+            ctx.strokeStyle = "yellow";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        async function predict() {
+            const distance = document.getElementById("distance").value;
+            const angle = document.getElementById("angle").value;
+            const body_part = document.getElementById("body_part").value;
+            const shot_type = document.getElementById("shot_type").value;
+            const technique = document.getElementById("technique").value;
+            const defenders = document.getElementById("defenders").value;
+            const side = document.getElementById("side").value;
+
+            const url = `http://127.0.0.1:8000/predict?distance=${distance}&angle=${angle}&body_part=${body_part}&shot_type=${shot_type}&technique=${technique}&defenders=${defenders}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            const xg = data.xG;
+            let danger = "";
+            if (xg < 0.05) danger = "🟦 Low chance";
+            else if (xg < 0.15) danger = "🟨 Moderate chance";
+            else if (xg < 0.30) danger = "🟧 Good chance";
+            else danger = "🟥 High chance";
+
+            document.getElementById("result").innerText = `xG: ${xg} — ${danger}`;
+            
+            drawPitch(distance, angle, defenders, side);
+}
+    </script>
+</body>
+</html>

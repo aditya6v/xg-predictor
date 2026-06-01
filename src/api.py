@@ -1,12 +1,17 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import pandas as pd
-import sys
-sys.path.append("src")
 
 app = FastAPI()
 
-# Load the model when the API starts
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 model = joblib.load("models/xg_model.pkl")
 
 @app.get("/")

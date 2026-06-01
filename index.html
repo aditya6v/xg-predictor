@@ -118,12 +118,12 @@
             
             const scale = 4;
             const shotX = 450 - (distance * scale);
-            const offset = (1 - angle / 90) * 100;
+            const offset = (1 - angle / 90) * 120;
             
             // Now uses side to determine which direction
-            const shotY = side === "center" ? 150 : 
-                        side === "left" ? 150 - offset : 
-                        150 + offset;
+            const shotY = side === "center" ? 200 : 
+                        side === "left" ? 200 - offset : 
+                        200 + offset;
             
             // Goalkeeper
             ctx.beginPath();

@@ -25,6 +25,17 @@ def predict(distance: float, angle: float, body_part: str,
             pressure: int = 0, gk_distance: float = 2.0,
             defenders: int = 0):
     
+    # Penalties always get fixed xG regardless of other features
+    if shot_type.lower() == "penalty":
+        return {"xG": 0.76, "note": "Penalty — fixed xG"}
+
+@app.get("/predict")
+def predict(distance: float, angle: float, body_part: str, 
+            shot_type: str, technique: str,
+            first_time: int = 0, open_goal: int = 0, 
+            pressure: int = 0, gk_distance: float = 2.0,
+            defenders: int = 0):
+    
     shot = {
         "distance": distance,
         "angle": angle,

@@ -11,6 +11,10 @@ def predict_xg(distance, angle, first_time, open_goal, pressure,
     body_part = body_part.lower()
     shot_type = shot_type.lower()
     technique = technique.lower()
+
+    # Penalties get fixed xG - they're always from same spot
+    if shot_type.lower() == "penalty":
+        return {"xG": 0.76}
     
     shot = {
         "distance": distance,

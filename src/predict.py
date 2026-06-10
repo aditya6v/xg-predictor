@@ -44,6 +44,6 @@ def predict_xg(distance, angle, first_time, open_goal, pressure,
 # print(predict_xg(28, 15, 1, 0, 0, "right", "openplay", "normal"))
 # print(predict_xg(6, 50, 0, 0, 0, "head", "corner", "normal"))
 
-print(predict_xg(22, 35, 1, 0, 1, "right", "freekick", "normal", 1.5, 4))
-print(predict_xg(6, 55, 0, 0, 0, "right", "openplay", "normal", 2.0, 0))
-print(predict_xg(6, 50, 0, 0, 0, "head", "corner", "normal", 3.0, 1))
+# print(predict_xg(22, 35, 1, 0, 1, "right", "freekick", "normal", 1.5, 4))
+# print(predict_xg(6, 55, 0, 0, 0, "right", "openplay", "normal", 2.0, 0))
+# print(predict_xg(6, 50, 0, 0, 0, "head", "corner", "normal", 3.0, 1))

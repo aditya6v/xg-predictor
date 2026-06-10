@@ -4,163 +4,468 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>xG Predictor</title>
-
     <style>
+        * { box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
-            max-width: 500px;
-            margin: 40px auto;
-            background-color: #1a1a2e;
-            color: white;
-            padding: 20px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f1117 0%, #1a1a2e 100%);
+            color: #e0e0e0;
+            margin: 0;
+            padding: 30px 20px;
+            min-height: 100vh;
         }
-        h1 { color: #4fc3f7; }
-        div { margin: 10px 0; }
-        label { display: inline-block; width: 180px; }
-        input, select {
-            padding: 5px;
-            width: 150px;
+        h1 {
+            color: #4fc3f7;
+            text-align: center;
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+        }
+        .container {
+            display: flex;
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+            align-items: flex-start;
+        }
+        .inputs {
+            flex: 0 0 340px;
             background: #16213e;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        .pitch-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .field {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        input, select {
+            width: 100%;
+            padding: 9px 12px;
+            background: #0f1117;
             color: white;
-            border: 1px solid #4fc3f7;
-            border-radius: 4px;
+            border: 1px solid #2a3f5f;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4fc3f7;
+        }
+        .checkbox-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 16px;
+        }
+        .checkbox-row label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        .checkbox-row input {
+            width: auto;
         }
         button {
-            margin-top: 15px;
-            padding: 10px 25px;
-            background: #4fc3f7;
-            color: black;
+            width: 100%;
+            margin-top: 10px;
+            padding: 13px;
+            background: linear-gradient(135deg, #4fc3f7, #2196c4);
+            color: #0f1117;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            transition: transform 0.1s;
         }
+        button:hover { transform: translateY(-2px); }
         #result {
             margin-top: 20px;
-            font-size: 28px;
-            color: #81c784;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-align: center;
+            min-height: 40px;
+        }
+        #danger {
+            text-align: center;
+            font-size: 1.1rem;
+            margin-top: 5px;
+        }
+        canvas {
+            background: #2d5a27;
+            border-radius: 10px;
+            cursor: crosshair;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        .hint {
+            color: #888;
+            font-size: 0.85rem;
+            margin-top: 12px;
+            text-align: center;
+        }
+        @media (max-width: 850px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .inputs {
+                flex: 1 1 auto;
+                width: 100%;
+                max-width: 400px;
+            }
+            canvas {
+                width: 100%;
+                max-width: 400px;
+                height: auto;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>xG Predictor</h1>
-    <p>Enter shot details to get an Expected Goals prediction</p>
-    <div>
-        <label>Distance (yards):</label>
-        <input type="number" id="distance" value="20">
-    </div>
-    
-    <div>
-        <label>Angle (degrees):</label>
-        <input type="number" id="angle" value="30">
-    </div>
+    <h1>⚽ xG Predictor</h1>
+    <p class="subtitle">Football xG Predictor — Click the pitch or enter values manually</p>
 
-    <div>
-        <label>Side:</label>
-        <select id="side">
-            <option value="center">Central</option>
-            <option value="left">Left Side</option>
-            <option value="right">Right Side</option>
-        </select>
-    </div>
+    <div class="container">
+        <div class="inputs">
+            <div class="field">
+                <label>Distance (yards)</label>
+                <input type="number" id="distance" value="15">
+            </div>
+            <div class="field">
+                <label>Angle (degrees)</label>
+                <input type="number" id="angle" value="30">
+            </div>
+            <div class="field">
+                <label>Side</label>
+                <select id="side">
+                    <option value="center">Central</option>
+                    <option value="left">Left</option>
+                    <option value="right">Right</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Body Part</label>
+                <select id="body_part">
+                    <option value="right">Right Foot</option>
+                    <option value="left">Left Foot</option>
+                    <option value="head">Head</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Shot Type</label>
+                <select id="shot_type">
+                    <option value="openplay">Open Play</option>
+                    <option value="corner">Corner</option>
+                    <option value="freekick">Free Kick</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Technique</label>
+                <select id="technique">
+                    <option value="normal">Normal</option>
+                    <option value="volley">Volley</option>
+                    <option value="halfvolley">Half Volley</option>
+                    <option value="lob">Lob</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Defenders in path</label>
+                <input type="number" id="defenders" value="0">
+            </div>
+            <div class="checkbox-row">
+                <label><input type="checkbox" id="first_time"> First time</label>
+                <label><input type="checkbox" id="open_goal"> Open goal</label>
+                <label><input type="checkbox" id="pressure"> Pressure</label>
+            </div>
+            <button onclick="predict()">Predict xG</button>
+            <div id="result"></div>
+            <div id="danger"></div>
+        </div>
 
-    <div>
-        <label>Body Part:</label>
-        <select id="body_part">
-            <option value="right">Right Foot</option>
-            <option value="left">Left Foot</option>
-            <option value="head">Head</option>
-        </select>
+        <div class="pitch-area">
+            <canvas id="pitch" width="400" height="600"></canvas>
+            <p class="hint">Click anywhere on the pitch to place your shot</p>
+        </div>
     </div>
-    
-    <div>
-        <label>Shot Type:</label>
-        <select id="shot_type">
-            <option value="openplay">Open Play</option>
-            <option value="corner">Corner</option>
-            <option value="freekick">Free Kick</option>
-        </select>
-    </div>
-    
-    <div>
-        <label>Technique:</label>
-        <select id="technique">
-            <option value="normal">Normal</option>
-            <option value="volley">Volley</option>
-            <option value="halfvolley">Half Volley</option>
-            <option value="lob">Lob</option>
-        </select>
-    </div>
-    
-    <div>
-        <label>Defenders in path:</label>
-        <input type="number" id="defenders" value="0">
-    </div>
-    
-    <button onclick="predict()">Predict xG</button>
-
-    <canvas id="pitch" width="500" height="400"></canvas>   
-    
-    <h2 id="result"></h2>
 
     <script>
-        function drawPitch(distance, angle, defenders, side) {
-            const canvas = document.getElementById("pitch");
-            const ctx = canvas.getContext("2d");
             
+        const canvas = document.getElementById("pitch");
+        const ctx = canvas.getContext("2d");
+
+        // Pitch dimensions (real yards → canvas pixels)
+        // Pitch is 80 wide x 120 long. We draw it vertically.
+        // Canvas: 400 wide (=80 yards), 600 tall (=120 yards)
+        const YARD_X = 400 / 80;   // 5 px per yard horizontally
+        const YARD_Y = 600 / 120;  // 5 px per yard vertically
+
+        // Goal is at the TOP of the canvas (attacking direction = up)
+        const GOAL_Y_YARDS = 0;        // top
+        const GOAL_CENTER_X = 40;      // middle of 80-wide pitch
+        const POST_LEFT = 36.34;
+        const POST_RIGHT = 43.66;
+
+        // Convert yard coords to canvas pixels
+        function toCanvas(xYards, yYards) {
+            return { x: xYards * YARD_X, y: yYards * YARD_Y };
+        }
+
+        let shotPos = null;  // {xYards, yYards} when user clicks
+        let lastXG = null;  // stores the most recent xG to display on pitch
+
+        function drawField() {
+            // Grass
             ctx.fillStyle = "#2d5a27";
-            ctx.fillRect(0, 0, 500, 400);
+            ctx.fillRect(0, 0, 400, 600);
+
+            // Mow stripes
+            for (let i = 0; i < 12; i++) {
+                if (i % 2 === 0) {
+                    ctx.fillStyle = "#327030";
+                    ctx.fillRect(0, i * 50, 400, 50);
+                }
+            }
+
+            ctx.strokeStyle = "rgba(255,255,255,0.85)";
+            ctx.lineWidth = 2;
+
+            // Outer boundary
+            ctx.strokeRect(10, 10, 380, 580);
+
+            // Halfway line
+            ctx.beginPath();
+            ctx.moveTo(10, 300);
+            ctx.lineTo(390, 300);
+            ctx.stroke();
+
+            // Centre circle
+            ctx.beginPath();
+            ctx.arc(200, 300, 50, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(200, 300, 3, 0, Math.PI * 2);
+            ctx.fillStyle = "white";
+            ctx.fill();
+
+            // ── TOP goal (attacking) ──
+            drawPenaltyBox(true);
+            // ── BOTTOM goal (defensive) ──
+            drawPenaltyBox(false);
+
+            // Labels
+            ctx.fillStyle = "rgba(255,255,255,0.5)";
+            ctx.font = "13px Segoe UI";
+            ctx.textAlign = "center";
+            ctx.fillText("▲ ATTACK", 200, 28);
+            ctx.fillText("DEFENCE", 200, 578);
+        }
+        
+        function drawPenaltyBox(isTop) {
+            const goalW = 7.32 * YARD_X;
+            const sixYard = 6 * YARD_Y;
+            const eighteenYard = 18 * YARD_Y;
+            const boxWidth = 44 * YARD_X;  // penalty box is ~44 yards wide
+            const sixWidth = 20 * YARD_X;
             
-            ctx.strokeStyle = "white";
-            ctx.lineWidth = 3;
-            ctx.strokeRect(460, 160, 40, 80);
-            ctx.strokeRect(350, 100, 150, 200);
+            const cx = 200;
+            const goalLineY = isTop ? 10 : 590;
+            const dir = isTop ? 1 : -1;
             
-            const scale = 4;
-            const shotX = 450 - (distance * scale);
-            const offset = (1 - angle / 90) * 120;
+            // Goal posts
+            ctx.strokeStyle = "#ffeb3b";
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(cx - goalW / 2, goalLineY);
+            ctx.lineTo(cx + goalW / 2, goalLineY);
+            ctx.stroke();
             
-            // Now uses side to determine which direction
-            const shotY = side === "center" ? 200 : 
-                        side === "left" ? 200 - offset : 
-                        200 + offset;
+            ctx.strokeStyle = "rgba(255,255,255,0.85)";
+            ctx.lineWidth = 2;
+            
+            // 18-yard box
+            ctx.strokeRect(cx - boxWidth / 2, isTop ? goalLineY : goalLineY - eighteenYard,
+            boxWidth, eighteenYard);
+            
+            // 6-yard box
+            ctx.strokeRect(cx - sixWidth / 2, isTop ? goalLineY : goalLineY - sixYard,
+            sixWidth, sixYard);
+            
+            // Penalty spot
+            ctx.beginPath();
+            ctx.arc(cx, goalLineY + dir * 12 * YARD_Y, 3, 0, Math.PI * 2);
+            ctx.fillStyle = "white";
+            ctx.fill();
+        }
+        
+        function drawShot() {
+            if (!shotPos) return;
+            
+            const goal = toCanvas(GOAL_CENTER_X, GOAL_Y_YARDS);
+            goal.y = 10;  // goal line
+            const shot = toCanvas(shotPos.xYards, shotPos.yYards);
+            
+            // Defenders
+            const defenders = parseInt(document.getElementById("defenders").value) || 0;
+            for (let i = 0; i < defenders; i++) {
+                const t = (i + 1) / (defenders + 1);
+                const dx = shot.x + (goal.x - shot.x) * t + (i % 2 === 0 ? -14 : 14);
+                const dy = shot.y + (goal.y - shot.y) * t;
+                ctx.beginPath();
+                ctx.arc(dx, dy, 7, 0, Math.PI * 2);
+                ctx.fillStyle = "#ef5350";
+                ctx.fill();
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
             
             // Goalkeeper
             ctx.beginPath();
-            ctx.arc(468, 200, 6, 0, Math.PI * 2);
+            ctx.arc(goal.x, 22, 7, 0, Math.PI * 2);
             ctx.fillStyle = "#ffeb3b";
             ctx.fill();
+            ctx.strokeStyle = "black";
+            ctx.stroke();
             
-            // Defenders spread along the line from shot to goal
-            for (let i = 0; i < defenders; i++) {
-                const t = (i + 1) / (defenders + 1);
-                const defX = shotX + (385 - shotX) * t + (Math.random() * 6 - 3);
-                const defY = shotY + (150 - shotY) * t + (i % 2 === 0 ? -12 : 12) + (Math.random() * 6 - 3);
-                
-                // Only draw if defender is between shot and goal
-                if (defX > shotX && defX < 470) {
-                    ctx.beginPath();
-                    ctx.arc(defX, defY, 6, 0, Math.PI * 2);
-                    ctx.fillStyle = "#ef5350";
-                    ctx.fill();
-                }
-}
-            
-            // Shot location
+            // Shot lines to both posts (the angle cone) — coloured by xG
+            const pl = toCanvas(POST_LEFT, 0); pl.y = 10;
+            const pr = toCanvas(POST_RIGHT, 0); pr.y = 10;
+
+            let coneFill = "rgba(79,195,247,0.15)";
+            let coneStroke = "rgba(79,195,247,0.6)";
+            if (lastXG !== null) {
+                if (lastXG < 0.05)      { coneFill = "rgba(79,195,247,0.18)"; coneStroke = "#4fc3f7"; }
+                else if (lastXG < 0.15) { coneFill = "rgba(255,235,59,0.18)"; coneStroke = "#ffeb3b"; }
+                else if (lastXG < 0.30) { coneFill = "rgba(255,152,0,0.20)";  coneStroke = "#ff9800"; }
+                else                    { coneFill = "rgba(239,83,80,0.22)";  coneStroke = "#ef5350"; }
+            }
+
             ctx.beginPath();
-            ctx.arc(shotX, shotY, 8, 0, Math.PI * 2);
+            ctx.moveTo(shot.x, shot.y);
+            ctx.lineTo(pl.x, pl.y);
+            ctx.lineTo(pr.x, pr.y);
+            ctx.closePath();
+            ctx.fillStyle = coneFill;
+            ctx.fill();
+            ctx.strokeStyle = coneStroke;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Shot dot
+            ctx.beginPath();
+            ctx.arc(shot.x, shot.y, 9, 0, Math.PI * 2);
             ctx.fillStyle = "#4fc3f7";
             ctx.fill();
-            
-            // Line to goal
-            ctx.beginPath();
-            ctx.moveTo(shotX, shotY);
-            ctx.lineTo(470, 200);
-            ctx.strokeStyle = "yellow";
+            ctx.strokeStyle = "white";
             ctx.lineWidth = 2;
             ctx.stroke();
+
+            // xG label next to the shot dot
+            if (lastXG !== null) {
+                ctx.fillStyle = "white";
+                ctx.font = "bold 15px Segoe UI";
+                ctx.textAlign = "left";
+                const labelX = shot.x + 14 > 340 ? shot.x - 60 : shot.x + 14;
+                ctx.fillText(`xG ${lastXG}`, labelX, shot.y + 5);
+            }
+        }
+        function render() {
+            drawField();
+            drawShot();
         }
 
+        // ── Calculate distance and angle from a clicked position ──
+        function updateFromClick(xYards, yYards) {
+            
+            lastXG = null;
+            const dx = GOAL_CENTER_X - xYards;
+            const dy = GOAL_Y_YARDS - yYards;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+        
+            // Angle using law of cosines
+            const dLeft = Math.sqrt((POST_LEFT - xYards) ** 2 + yYards ** 2);
+            const dRight = Math.sqrt((POST_RIGHT - xYards) ** 2 + yYards ** 2);
+            const goalWidth = POST_RIGHT - POST_LEFT;
+            let cosA = (dLeft ** 2 + dRight ** 2 - goalWidth ** 2) / (2 * dLeft * dRight);
+            cosA = Math.max(-1, Math.min(1, cosA));
+            const angle = Math.acos(cosA) * 180 / Math.PI;
+    
+            document.getElementById("distance").value = distance.toFixed(1);
+            document.getElementById("angle").value = angle.toFixed(1);
+    
+            // Set side based on x position
+            const side = xYards < 38 ? "left" : xYards > 42 ? "right" : "center";
+            document.getElementById("side").value = side;
+        }
+            // Place the shot dot on the pitch from manual distance + angle + side
+            function updateFromManual() {
+                const distance = parseFloat(document.getElementById("distance").value);
+            const angle = parseFloat(document.getElementById("angle").value);
+            const side = document.getElementById("side").value;
+
+            if (isNaN(distance) || isNaN(angle)) return;
+            lastXG = null;
+
+            // The shot sits on a circle of radius=distance around the goal centre.
+            // We use the angle + side to decide how far off-centre (x) it is.
+            // Larger angle = more central, smaller angle = wider.
+            // Max horizontal spread capped so it stays on the pitch.
+            const spread = (1 - angle / 90) * distance;   // how far sideways
+            let xYards = GOAL_CENTER_X;
+            if (side === "left")  xYards = GOAL_CENTER_X - spread;
+            if (side === "right") xYards = GOAL_CENTER_X + spread;
+
+            // y from pythagoras: distance² = (x-goalX)² + y²  → y = √(distance² - sideways²)
+            const sideways = Math.abs(GOAL_CENTER_X - xYards);
+            let yYards = Math.sqrt(Math.max(0, distance * distance - sideways * sideways));
+
+            // Clamp inside pitch bounds
+            xYards = Math.max(2, Math.min(78, xYards));
+            yYards = Math.max(2, Math.min(115, yYards));
+
+            shotPos = { xYards, yYards };
+            render();
+        }
+
+        
+
+        // ── Click handler on the pitch ──
+        canvas.addEventListener("click", (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const px = e.clientX - rect.left;
+            const py = e.clientY - rect.top;
+
+            // Only allow clicks in the attacking half (top half)
+            if (py > 300) {
+                alert("Place your shot in the attacking half (top half near the goal)!");
+                return;
+            }
+
+            const xYards = px / YARD_X;
+            const yYards = py / YARD_Y;
+
+            shotPos = { xYards, yYards };
+            updateFromClick(xYards, yYards);
+            render();
+        });
+
+        // ── Predict (works for both click and manual input) ──
         async function predict() {
             const distance = document.getElementById("distance").value;
             const angle = document.getElementById("angle").value;
@@ -168,24 +473,55 @@
             const shot_type = document.getElementById("shot_type").value;
             const technique = document.getElementById("technique").value;
             const defenders = document.getElementById("defenders").value;
-            const side = document.getElementById("side").value;
+            const first_time = document.getElementById("first_time").checked ? 1 : 0;
+            const open_goal = document.getElementById("open_goal").checked ? 1 : 0;
+            const pressure = document.getElementById("pressure").checked ? 1 : 0;
 
-            const url = `https://aditya-xg-predictor.onrender.com/predict?distance=${distance}&angle=${angle}&body_part=${body_part}&shot_type=${shot_type}&technique=${technique}&defenders=${defenders}`;
+            if (angle < 1 || angle > 90) { alert("Angle must be 1–90°"); return; }
+            if (distance < 1 || distance > 60) { alert("Distance must be 1–60 yards"); return; }
 
-            const response = await fetch(url);
-            const data = await response.json();
+            // If no click yet, place shot from manual distance/angle (central approx)
+            if (!shotPos) {
+                const side = document.getElementById("side").value;
+                const yYards = distance;
+                const xYards = side === "left" ? 30 : side === "right" ? 50 : 40;
+                shotPos = { xYards, yYards: Math.min(yYards, 115) };
+            }
 
-            const xg = data.xG;
-            let danger = "";
-            if (xg < 0.05) danger = "🟦 Low chance";
-            else if (xg < 0.15) danger = "🟨 Moderate chance";
-            else if (xg < 0.30) danger = "🟧 Good chance";
-            else danger = "🟥 High chance";
+            document.getElementById("result").innerText = "Calculating...";
+            document.getElementById("danger").innerText = "";
 
-            document.getElementById("result").innerText = `xG: ${xg} — ${danger}`;
-            
-            drawPitch(distance, angle, defenders, side);
-}
+            const url = `https://aditya-xg-predictor.onrender.com/predict?distance=${distance}&angle=${angle}&body_part=${body_part}&shot_type=${shot_type}&technique=${technique}&defenders=${defenders}&first_time=${first_time}&open_goal=${open_goal}&pressure=${pressure}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                const xg = data.xG;
+                lastXG = xg;
+
+                let danger, color;
+                if (xg < 0.05) { danger = "🟦 Low chance"; color = "#4fc3f7"; }
+                else if (xg < 0.15) { danger = "🟨 Moderate chance"; color = "#ffeb3b"; }
+                else if (xg < 0.30) { danger = "🟧 Good chance"; color = "#ff9800"; }
+                else { danger = "🟥 High chance"; color = "#ef5350"; }
+
+                document.getElementById("result").innerHTML = `xG: <span style="color:${color}">${xg}</span>`;
+                document.getElementById("danger").innerText = danger;
+
+                render();
+            } catch (err) {
+                document.getElementById("result").innerText = "Error — API waking up, try again in 30s";
+            }
+        }
+
+        // Redraw defenders live when count changes
+        document.getElementById("defenders").addEventListener("input", render);
+        document.getElementById("distance").addEventListener("input", updateFromManual);
+        document.getElementById("angle").addEventListener("input", updateFromManual);
+        document.getElementById("side").addEventListener("change", updateFromManual);
+
+        // Initial draw
+        render();
     </script>
 </body>
 </html>

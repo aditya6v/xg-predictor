@@ -1,88 +1,41 @@
-\# xG Predictor — FIFA World Cup
-
-
+# xG Predictor — Football Expected Goals
 
 A machine learning model that predicts Expected Goals (xG) 
-
 for football shots using StatsBomb open data.
 
+## Live Demo
+Frontend: https://aditya6v.github.io/xg-predictor
+API: https://aditya-xg-predictor.onrender.com
 
-
-\## What is xG?
-
+## What is xG?
 Expected Goals (xG) measures the probability of a shot 
-
 resulting in a goal based on historical data. A shot with 
+xG = 0.35 means historically 35% of similar shots result 
+in a goal.
 
-xG = 0.35 means historically 35% of similar shots result in a goal.
+## Data
+- FIFA World Cup 2018 and 2022
+- La Liga 2016/17 to 2020/21 (Barcelona matches)
+- Champions League 2015/16, 2017/18, 2018/19
+- 7,452 shots total after cleaning
+- Source: StatsBomb open data (free tier)
 
+## Model
+- XGBoost Classifier
+- AUC Score: 0.810
+- Penalties handled separately with fixed xG of 0.76
+- Features:
+  - Distance to goal
+  - Shot angle (law of cosines)
+  - Body part (head, left foot, right foot)
+  - Shot type (open play, corner, free kick)
+  - Technique (normal, volley, half volley, lob)
+  - Goalkeeper distance to goal centre
+  - Number of defenders in shot path
+  - First time shot, open goal, under pressure flags
 
-
-\## Data
-
-\- FIFA World Cup 2018 and 2022
-
-\- 3200 shots from 128 matches
-
-\- Source: StatsBomb open data (free)
-
-
-
-\## Model
-
-\- XGBoost Classifier
-
-\- AUC Score: 0.771
-
-\- Features: distance, angle, body part, shot type, 
-
-&#x20; technique, goalkeeper position, defenders in path
-
-
-
-\## Project Structure
-
-\- src/data.py — loads shot data from StatsBomb
-
-\- src/features.py — calculates distance, angle, goalkeeper position
-
-\- src/clean.py — cleans and prepares data
-
-\- src/model.py — trains XGBoost model
-
-\- src/predict.py — makes predictions
-
-\- src/api.py — FastAPI REST endpoint
-
-\- frontend/index.html — web interface
-
-
-
-\## How to Run
-
-pip install -r requirements.txt
-
-python src/data.py
-
-python src/clean.py
-
-python src/model.py
-
-uvicorn src.api:app --reload
-
-
-
-\## API Usage
-
-http://127.0.0.1:8000/predict?distance=15\&angle=40\&body\_part=right\&shot\_type=openplay\&technique=normal
-
-
-
-\## Known Limitations
-
-\- Free kick xG may be slightly high without tracking data
-
-\- Defender positions are approximate
-
-\- Model trained on World Cup data only
-
+## Project Structure
+- src/data.py — loads shot data from StatsBomb
+- src/features.py — calculates distance, angle, goalkeeper position, defenders
+- src/clean.py — cleans and prepares data
+- src/mod

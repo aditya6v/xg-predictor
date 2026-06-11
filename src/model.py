@@ -28,6 +28,11 @@ from sklearn.metrics import roc_auc_score
 auc = roc_auc_score(y_test, y_pred)
 print(f"AUC Score: {auc:.3f}")
 
+from sklearn.metrics import brier_score_loss
+
+brier = brier_score_loss(y_test, y_pred)
+print(f"Brier Score: {brier:.4f}")
+
 import joblib
 
 joblib.dump(model, "models/xg_model.pkl")
